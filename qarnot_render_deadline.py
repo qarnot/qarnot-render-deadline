@@ -244,7 +244,7 @@ class QarnotRenderDeadline:
         for active_pool in active_pools:
             try:
                 pool = self.conn.retrieve_pool(active_pool.uuid)
-                pool.delete(False)
+                pool.close()
             except:
                 logging.error("Error terminating Pool")
 
