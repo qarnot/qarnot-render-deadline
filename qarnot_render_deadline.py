@@ -175,31 +175,30 @@ class QarnotRenderDeadline:
         )
         pool.submit()
 
-        for i in range(count):
-            # name form: deadline-<profile>-<random>
-            # name = self.deadline_prefix + "-" + profile + random_suffix(r)
-            task_name = profile + random_suffix(r)
-            task = self.conn.create_task(task_name, pool, 1)
-            bucketOut = self.conn.create_bucket(self.results_bucket)
-            bucketIn = self.conn.create_bucket(self.resources_bucket)
-            task.results = bucketOut
-            task.resources = [bucketIn]
+        # name form: deadline-<profile>-<random>
+        # name = self.deadline_prefix + "-" + profile + random_suffix(r)
+        task_name = profile + random_suffix(r)
+        task = self.conn.create_task(task_name, pool, count)
+        bucketOut = self.conn.create_bucket(self.results_bucket)
+        bucketIn = self.conn.create_bucket(self.resources_bucket)
+        task.results = bucketOut
+        task.resources = [bucketIn]
 
-            task.constants["DEADLINE_REPOSITORY"] = self.repository
-            task.constants["DEADLINE_SSL"] = self.proxy_ssl
-            task.constants["DEADLINE_LICENSE_MODE"] = self.license_mode
-            task.constants["DEADLINE_LICENSE_SERVER"] = self.license_server
-            task.constants["DEADLINE_CRT"] = "".join(self.proxy_crt.splitlines())
-            # TODO: specify docker repo
-            # instance.task.constants['DOCKER_HOST'] = instance.Name
-            # instance.task.constants['DOCKER_TAG'] = "2.100.106"
+        task.constants["DEADLINE_REPOSITORY"] = self.repository
+        task.constants["DEADLINE_SSL"] = self.proxy_ssl
+        task.constants["DEADLINE_LICENSE_MODE"] = self.license_mode
+        task.constants["DEADLINE_LICENSE_SERVER"] = self.license_server
+        task.constants["DEADLINE_CRT"] = "".join(self.proxy_crt.splitlines())
+        # TODO: specify docker repo
+        # instance.task.constants['DOCKER_HOST'] = instance.Name
+        # instance.task.constants['DOCKER_TAG'] = "2.100.106"
 
-            task.submit()
+        task.submit()
 
-            # take snapshots every 5 minutes
-            task.snapshot(5 * 60)
+        # take snapshots every 5 minutes
+        task.snapshot(5 * 60)
 
-            self.started_tasks.append(task)
+        self.started_tasks.append(task)
 
         # self.StartInstances(startedIDs)
         return self.started_tasks
