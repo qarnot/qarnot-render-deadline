@@ -101,14 +101,28 @@ class QarnotRenderDeadline:
 
         if self.conn is not None:
             tasks = self.conn.tasks()
+            excluded_states = [
+                "UploadingResults",
+                "DownloadingResults",
+                "Cancelled",
+                "Success",
+                "Failure",
+            ]
 
             for task in tasks:
-                # add only tasks dedicated to deadline
-                if self.deadline_prefix in task.name:
+                # add only active tasks dedicated to deadline
+                logging.debug('Evaluating task "{}": {}'.format(task.name, task.state))
+                if (
+                    all(x not in task.state for x in excluded_states)
+                    and self.deadline_prefix in task.name
+                ):
                     active_tasks.append(task)
         else:
             raise Exception(self.error_credentials)
 
+        logging.debug(
+            'Active tasks: "{}"'.format([(x.name, x.uuid) for x in active_tasks])
+        )
         return active_tasks
 
     def get_active_pools(self):
@@ -124,14 +138,22 @@ class QarnotRenderDeadline:
 
         if self.conn is not None:
             pools = self.conn.pools()
+            excluded_states = ["Closed", "Closing", "PendingDelete", "Failure"]
 
             for pool in pools:
-                # add only pools dedicated to deadline
-                if self.deadline_prefix in pool.name:
+                # add only active pools dedicated to deadline
+                logging.debug('Evaluating pool "{}": {}'.format(pool.name, pool.state))
+                if (
+                    all(x not in pool.state for x in excluded_states)
+                    and self.deadline_prefix in pool.name
+                ):
                     active_pools.append(pool)
         else:
             raise Exception(self.error_credentials)
 
+        logging.debug(
+            'Active pools: "{}"'.format([(x.name, x.uuid) for x in active_pools])
+        )
         return active_pools
 
     def create_instances(
