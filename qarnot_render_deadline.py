@@ -41,29 +41,13 @@ class QarnotRenderDeadline:
             raise Exception(self.error_credentials)
 
         # init connection to API
-        self.conn = qarnot.connection.Connection(
-            client_token=self.client_token, cluster_url=self.cluster_url
-        )
-
-    def verify_access(self):
-        """
-        Verify if requests to Qarnot API are valid.
-
-        Returns:
-            True if valid
-        """
-
-        self.refresh_connection()
-        if self.conn is None:
-            return False
-
         try:
-            self.conn.user_info
-        except:
-            logging.error("Error: Invalid credentials")
-            return False
-
-        return True
+            self.conn = qarnot.connection.Connection(
+                client_token=self.client_token, cluster_url=self.cluster_url
+            )
+        except Exception as e:
+            logging.error("Connection error")
+            raise
 
     def get_available_profiles(self):
         """
@@ -75,10 +59,9 @@ class QarnotRenderDeadline:
                 Must be implemented for the Balancer to work.
         """
 
-        if self.verify_access() is False:
-            raise Exception(self.error_credentials)
-
         available_profiles = []
+        self.refresh_connection()
+
         profiles = self.conn.profiles()
 
         for profile in profiles:
@@ -99,26 +82,23 @@ class QarnotRenderDeadline:
         active_tasks = []
         self.refresh_connection()
 
-        if self.conn is not None:
-            tasks = self.conn.tasks()
-            excluded_states = [
-                "UploadingResults",
-                "DownloadingResults",
-                "Cancelled",
-                "Success",
-                "Failure",
-            ]
+        tasks = self.conn.tasks()
+        excluded_states = [
+            "UploadingResults",
+            "DownloadingResults",
+            "Cancelled",
+            "Success",
+            "Failure",
+        ]
 
-            for task in tasks:
-                # add only active tasks dedicated to deadline
-                logging.debug('Evaluating task "{}": {}'.format(task.name, task.state))
-                if (
-                    all(x not in task.state for x in excluded_states)
-                    and self.deadline_prefix in task.name
-                ):
-                    active_tasks.append(task)
-        else:
-            raise Exception(self.error_credentials)
+        for task in tasks:
+            # add only active tasks dedicated to deadline
+            logging.debug('Evaluating task "{}": {}'.format(task.name, task.state))
+            if (
+                all(x not in task.state for x in excluded_states)
+                and self.deadline_prefix in task.name
+            ):
+                active_tasks.append(task)
 
         logging.debug(
             'Active tasks: "{}"'.format([(x.name, x.uuid) for x in active_tasks])
@@ -136,20 +116,17 @@ class QarnotRenderDeadline:
         active_pools = []
         self.refresh_connection()
 
-        if self.conn is not None:
-            pools = self.conn.pools()
-            excluded_states = ["Closed", "Closing", "PendingDelete", "Failure"]
+        pools = self.conn.pools()
+        excluded_states = ["Closed", "Closing", "PendingDelete", "Failure"]
 
-            for pool in pools:
-                # add only active pools dedicated to deadline
-                logging.debug('Evaluating pool "{}": {}'.format(pool.name, pool.state))
-                if (
-                    all(x not in pool.state for x in excluded_states)
-                    and self.deadline_prefix in pool.name
-                ):
-                    active_pools.append(pool)
-        else:
-            raise Exception(self.error_credentials)
+        for pool in pools:
+            # add only active pools dedicated to deadline
+            logging.debug('Evaluating pool "{}": {}'.format(pool.name, pool.state))
+            if (
+                all(x not in pool.state for x in excluded_states)
+                and self.deadline_prefix in pool.name
+            ):
+                active_pools.append(pool)
 
         logging.debug(
             'Active pools: "{}"'.format([(x.name, x.uuid) for x in active_pools])
@@ -174,9 +151,6 @@ class QarnotRenderDeadline:
 
         startedIDs = []
         self.refresh_connection()
-
-        if self.verify_access() is False:
-            raise Exception(self.error_credentials)
 
         # is random name good enough for uniqueness?
         def r():
@@ -234,6 +208,8 @@ class QarnotRenderDeadline:
             terminated successfully
         """
 
+        self.refresh_connection()
+
         active_tasks = self.get_active_tasks()
         # TODO: return list of boolean values indicating which pools terminated
         # successfully
@@ -243,10 +219,6 @@ class QarnotRenderDeadline:
             results = []
 
         results = [False] * len(active_tasks)
-        self.refresh_connection()
-
-        if self.verify_access() is False:
-            raise Exception(self.error_credentials)
 
         terminated_tasks = []
         for active_task in active_tasks:
