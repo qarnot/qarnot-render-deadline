@@ -69,6 +69,11 @@ class QarnotRenderDeadline:
             if self.deadline_prefix in profile.name:
                 available_profiles.append(profile)
 
+        logging.debug(
+            'Available deadline profiles: "{}"'.format(
+                [(x.name) for x in available_profiles]
+            )
+        )
         return available_profiles
 
     def get_active_tasks(self):
