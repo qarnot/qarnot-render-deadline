@@ -176,8 +176,6 @@ class QarnotRenderDeadline:
         )
         pool.submit()
 
-        # name form: deadline-<profile>-<random>
-        # name = self.deadline_prefix + "-" + profile + random_suffix(r)
         task_name = profile + random_suffix(r)
         task = self.conn.create_task(task_name, pool, count)
         bucketOut = self.conn.create_bucket(self.results_bucket)
@@ -190,9 +188,6 @@ class QarnotRenderDeadline:
         task.constants["DEADLINE_LICENSE_MODE"] = self.license_mode
         task.constants["DEADLINE_LICENSE_SERVER"] = self.license_server
         task.constants["DEADLINE_CRT"] = "".join(self.proxy_crt.splitlines())
-        # TODO: specify docker repo
-        # instance.task.constants['DOCKER_HOST'] = instance.Name
-        # instance.task.constants['DOCKER_TAG'] = "2.100.106"
 
         task.submit()
 
@@ -201,7 +196,6 @@ class QarnotRenderDeadline:
 
         self.started_tasks.append(task)
 
-        # self.StartInstances(startedIDs)
         return self.started_tasks
 
     def terminate_instances(self):
