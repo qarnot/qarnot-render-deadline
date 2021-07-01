@@ -4,7 +4,7 @@ import random
 
 
 class QarnotRenderDeadline:
-    def __init__(self, client_token, cluster_url="https://api.qarnot.com") -> None:
+    def __init__(self, client_token, cluster_url="https://api.qarnot.com"):
         """
         Initializes object with Qarnot connection information.
 
