@@ -198,7 +198,7 @@ class QarnotRenderDeadline:
 
         return self.started_tasks
 
-    def terminate_instances(self):
+    def stop_instances(self):
         """
         Stop all instances
         """
