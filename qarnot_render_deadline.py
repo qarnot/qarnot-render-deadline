@@ -200,44 +200,25 @@ class QarnotRenderDeadline:
 
     def terminate_instances(self):
         """
-        Stop instances and return list of stopped tasks.
-
-        Returns:
-            results: list of boolean values indicating which tasks
-            terminated successfully
+        Stop all instances
         """
 
         self.refresh_connection()
 
         active_tasks = self.get_active_tasks()
-        # TODO: return list of boolean values indicating which pools terminated
-        # successfully
         active_pools = self.get_active_pools()
 
-        if active_tasks is None or len(active_tasks) == 0:
-            results = []
-
-        results = [False] * len(active_tasks)
-
-        terminated_tasks = []
         for active_task in active_tasks:
             try:
                 task = self.conn.retrieve_task(active_task)
                 task.instant()
                 task.delete(False, False)
             except:
-                logging.error("Error terminating Instance")
-
-        for i in range(0, len(active_tasks)):
-            active_task = active_tasks[i]
-            if active_task in terminated_tasks:
-                results[i] = True
+                logging.error("Error deleting Task {}".format(active_task.name))
 
         for active_pool in active_pools:
             try:
                 pool = self.conn.retrieve_pool(active_pool.uuid)
                 pool.close()
             except:
-                logging.error("Error terminating Pool")
-
-        return results
+                logging.error("Error closing Pool {}".format(active_pool.name))
