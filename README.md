@@ -44,3 +44,23 @@ It has been tested with Deadline v10.1.3.6.
    ```
    <repo_path>/custom/scripts/General/QarnotRender.py
    ```
+
+## Configuration
+
+The `qarnot_render_deadline.py` module has a `CONFIGURATION` section at the beginning of the file that needs to be filled:
+
+```python
+######## CONFIGURATION #########################################################
+self.license_server = ""
+self.license_mode = "Standard"
+# Your Deadline Remote Connection Server (RCS) in the form "hostname:port"
+self.repository = ""
+# TODO: handle the case where a certificate file is provided
+self.proxy_crt = "True"
+self.proxy_ssl = "True"
+######## CONFIGURATION #########################################################
+```
+
+Only `license_server` and `repository` have to be filled (the rest being handled in the Qarnot profile/payload).
+
+The configuration is done manually in `qdeadline.py` for now but all those options will eventually be exposed in the Deadline Monitor UI.
