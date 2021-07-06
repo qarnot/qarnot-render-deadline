@@ -19,6 +19,8 @@ q_render_deadline.stop_instances()
 
 The Deadline Monitor UI script `QarnotRender` can be found in the `Scripts` menu.
 
+It has been tested with Deadline v10.1.3.6.
+
 ## Installation
 
  * python module and dependencies
