@@ -23,7 +23,8 @@ class QarnotRenderDeadline:
         self.license_mode = "Standard"
         # Your Deadline Remote Connection Server (RCS) in the form "hostname:port"
         self.repository = ""
-        self.proxy_crt = "/opt/Thinkbox/Deadline10RemoteClient.pfx"
+        # TODO: handle the case where a certificate file is provided
+        self.proxy_crt = "True"
         self.proxy_ssl = "True"
         ######## CONFIGURATION #########################################################
         self.deadline_prefix = "deadline"
@@ -187,7 +188,8 @@ class QarnotRenderDeadline:
         task.constants["DEADLINE_SSL"] = self.proxy_ssl
         task.constants["DEADLINE_LICENSE_MODE"] = self.license_mode
         task.constants["DEADLINE_LICENSE_SERVER"] = self.license_server
-        task.constants["DEADLINE_CRT"] = "".join(self.proxy_crt.splitlines())
+        # TODO: handle the case where a certificate file is provided
+        task.constants["DEADLINE_CRT"] = self.proxy_crt
 
         task.submit()
 
