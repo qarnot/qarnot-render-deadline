@@ -205,16 +205,7 @@ class QarnotRenderDeadline:
 
         self.refresh_connection()
 
-        active_tasks = self.get_active_tasks()
         active_pools = self.get_active_pools()
-
-        for active_task in active_tasks:
-            try:
-                task = self.conn.retrieve_task(active_task)
-                task.instant()
-                task.delete(False, False)
-            except:
-                logging.error("Error deleting Task {}".format(active_task.name))
 
         for active_pool in active_pools:
             try:
