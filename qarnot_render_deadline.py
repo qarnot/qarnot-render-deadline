@@ -55,9 +55,7 @@ class QarnotRenderDeadline:
         Get available deadline profiles.
 
         Returns:
-            available_profiles: Return list of available OSImages
-                supported by this provider : correspond to API profiles
-                Must be implemented for the Balancer to work.
+            available_profiles: list of available deadline profiles
         """
 
         available_profiles = []
@@ -82,7 +80,7 @@ class QarnotRenderDeadline:
         Get active tasks.
 
         Returns:
-            active_tasks: list of tasks objects that are currently active
+            active_tasks: list of task objects that are currently active
         """
 
         active_tasks = []
@@ -116,7 +114,7 @@ class QarnotRenderDeadline:
         Get active pools.
 
         Returns:
-            active_pools: list of tasks objects that are currently active
+            active_pools: list of pool objects that are currently active
         """
 
         active_pools = []
