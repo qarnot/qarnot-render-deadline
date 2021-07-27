@@ -1,6 +1,7 @@
 import qarnot
 import logging
 import random
+import base64
 
 
 class QarnotRenderDeadline:
@@ -23,8 +24,8 @@ class QarnotRenderDeadline:
         self.license_mode = "Standard"
         # Your Deadline Remote Connection Server (RCS) in the form "hostname:port"
         self.repository = ""
-        # TODO: handle the case where a certificate file is provided
-        self.proxy_crt = "True"
+        # Path to your "Deadline10RemoteClient.pfx" file
+        self.proxy_crt = ""
         self.proxy_ssl = "True"
         ######## CONFIGURATION #########################################################
         self.deadline_prefix = "deadline"
@@ -187,8 +188,9 @@ class QarnotRenderDeadline:
         task.constants["DEADLINE_SSL"] = self.proxy_ssl
         task.constants["DEADLINE_LICENSE_MODE"] = self.license_mode
         task.constants["DEADLINE_LICENSE_SERVER"] = self.license_server
-        # TODO: handle the case where a certificate file is provided
-        task.constants["DEADLINE_CRT"] = self.proxy_crt
+        with open(self.proxy_crt, "rb") as fin:
+            deadline_certificate = base64.b64encode(fin.read())
+        task.constants["DEADLINE_CRT"] = deadline_certificate
 
         task.submit()
 
