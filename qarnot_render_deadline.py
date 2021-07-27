@@ -169,13 +169,14 @@ class QarnotRenderDeadline:
             # use a name with random 3byte hex value
             return rand
 
-        pool_name = profile + random_suffix(r)
+        suffix = random_suffix(r)
+        pool_name = profile + suffix
         pool = self.conn.create_pool(
             name=pool_name, profile=profile, instancecount=count
         )
         pool.submit()
 
-        task_name = profile + random_suffix(r)
+        task_name = profile + suffix + "-task"
         task = self.conn.create_task(task_name, pool, count)
         bucketOut = self.conn.create_bucket(self.results_bucket)
         bucketIn = self.conn.create_bucket(self.resources_bucket)
