@@ -13,7 +13,6 @@ import os
 ## Globals
 ########################################################################
 script_dialog = None
-settings = None
 q_render_deadline = None
 
 ########################################################################
@@ -21,7 +20,6 @@ q_render_deadline = None
 ########################################################################
 def __main__():
     global script_dialog
-    global settings
 
     script_dialog = DeadlineScriptDialog()
     script_dialog.SetTitle("Qarnot Render")
