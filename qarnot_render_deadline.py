@@ -86,7 +86,7 @@ class QarnotRenderDeadline:
         active_tasks = []
         self.refresh_connection()
 
-        tasks = self.conn.tasks()
+        tasks = self.conn.tasks(summary=True)
         excluded_states = [
             "UploadingResults",
             "DownloadingResults",
@@ -120,7 +120,7 @@ class QarnotRenderDeadline:
         active_pools = []
         self.refresh_connection()
 
-        pools = self.conn.pools()
+        pools = self.conn.pools(summary=True)
         excluded_states = ["Closed", "Closing", "PendingDelete", "Failure"]
 
         for pool in pools:
