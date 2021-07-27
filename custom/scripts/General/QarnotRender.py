@@ -1,6 +1,7 @@
 from System.IO import *
 
-from PyQt5.QtCore import QObject, pyqtSignal, QThreadPool, QRunnable, pyqtSlot
+from PyQt5 import QtWidgets, QtCore
+from PyQt5.QtCore import QObject, pyqtSignal, QThreadPool, QRunnable, pyqtSlot, Qt
 
 from Deadline.Scripting import *
 from DeadlineUI.Controls.Scripting.DeadlineScriptDialog import DeadlineScriptDialog
@@ -29,7 +30,7 @@ def __main__():
     script_dialog.AddTabControl("Example Tab Control", 0, 0)
 
     script_dialog.AddTabPage("Manage")
-    script_dialog.AddGrid()
+    grid = script_dialog.AddGrid()
 
     script_dialog.AddControlToGrid(
         "StartInstancesSeparator",
@@ -90,6 +91,43 @@ def __main__():
         "ConsoleButton", "ButtonControl", "Open Qarnot Console", 5, 0, colSpan=2
     )
     console_button.ValueModified.connect(console_button_pressed)
+
+    script_dialog.AddControlToGrid(
+        "PoolsSeparator",
+        "SeparatorControl",
+        "Active pools",
+        6,
+        0,
+        colSpan=2,
+    )
+
+    pool_model = PoolModel()
+
+    pool_view = QtWidgets.QTableView()
+    pool_view.setObjectName("PoolView")
+    pool_view.setModel(pool_model)
+    # hide the UUID column (but the data needs to stay to launch actions against
+    # the selected pools)
+    pool_view.setColumnHidden(2, True)
+    # auto adjust column width based on content
+    pool_view.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+    pool_view.resizeColumnsToContents()
+    # automatically resize columns when the model changes
+    pool_model.layoutChanged.connect(pool_view.resizeColumnsToContents)
+    # select row with one click
+    pool_view.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
+    # automatically enable/disable the pool close button
+    pool_model.layoutChanged.connect(update_pool_close_button)
+
+    grid.addWidget(pool_view, 7, 0, 1, 2)
+
+    pool_close_button = script_dialog.AddControlToGrid(
+        "PoolCloseButton", "ButtonControl", "Close pool", 8, 0, colSpan=1
+    )
+    # disable the close button by default
+    # it will be enabled when the pool table is populated
+    script_dialog.SetEnabled("PoolCloseButton", False)
+    pool_close_button.ValueModified.connect(pool_close_button_pressed)
 
     script_dialog.EndGrid()
     script_dialog.EndTabPage()
@@ -157,6 +195,7 @@ def __main__():
     )
 
     refresh_qarnot_profiles_combo()
+    refresh_qarnot_pools()
 
     script_dialog.ShowDialog(True)
 
@@ -260,6 +299,42 @@ def display_invalid_conf():
     )
 
 
+def refresh_qarnot_pools():
+    # fetch pools in a worker thread
+    worker = Worker(fetch_qarnot_pools)
+    worker.signals.result.connect(update_pool_view)
+    QThreadPool.globalInstance().start(worker)
+
+
+def fetch_qarnot_pools():
+
+    # display loading message
+    pool_view = script_dialog.findChild(
+        QtWidgets.QTableView,
+        "PoolView",
+    )
+    pool_model = pool_view.model()
+    pool_model.display_loading_message()
+
+    # fetch active pools
+    q_render_deadline.refresh_connection()
+    active_pools = q_render_deadline.get_active_pools()
+
+    return active_pools
+
+
+def update_pool_view(active_pools):
+    global script_dialog
+
+    pool_view = script_dialog.findChild(
+        QtWidgets.QTableView,
+        "PoolView",
+    )
+    pool_model = pool_view.model()
+
+    pool_model.pools = active_pools
+
+
 def submit_button_pressed(*args):
     global script_dialog
     global q_render_deadline
@@ -271,6 +346,7 @@ def submit_button_pressed(*args):
         "Pool submitted, open the Qarnot Console for more information",
         "Submit confirmation",
     )
+    refresh_qarnot_pools()
 
 
 def console_button_pressed(*args):
@@ -278,6 +354,41 @@ def console_button_pressed(*args):
 
     url = script_dialog.GetValue("ClusterAPIURLBox").replace("api", "console")
     script_dialog.OpenUrl(url)
+
+
+def update_pool_close_button(*args):
+    global script_dialog
+
+    pool_view = script_dialog.findChild(
+        QtWidgets.QTableView,
+        "PoolView",
+    )
+    pool_model = pool_view.model()
+
+    # check pool uuid value of first line
+    pool_uuid = pool_model.data(pool_model.index(0, 2), Qt.DisplayRole)
+
+    if pool_uuid:
+        script_dialog.SetEnabled("PoolCloseButton", True)
+    else:
+        script_dialog.SetEnabled("PoolCloseButton", False)
+
+
+def pool_close_button_pressed(*args):
+    global script_dialog
+    global q_render_deadline
+
+    pool_view = script_dialog.findChild(
+        QtWidgets.QTableView,
+        "PoolView",
+    )
+    indexes = pool_view.selectionModel().selectedRows()
+
+    for index in indexes:
+        pool_uuid = index.child(index.row(), 2).data()
+        q_render_deadline.stop_instances(pool_uuid)
+
+    refresh_qarnot_pools()
 
 
 def update_qarnot_account_url(*args):
@@ -373,3 +484,73 @@ class Worker(QRunnable):
             self.signals.result.emit(result)  # Return the result of the processing
         finally:
             self.signals.finished.emit()  # Done
+
+
+class PoolModel(QtCore.QAbstractTableModel):
+    def __init__(self, pools=None):
+        super(QtCore.QAbstractTableModel, self).__init__()
+        self._pools = pools
+        self._data = []
+        self._columns = ["Pool name", "Instances", "UUID"]
+
+        self._set_table_data()
+
+    def _set_table_data(self):
+        if self._pools:
+            self._data = [(x.name, x.instancecount, x.uuid) for x in self._pools]
+        else:
+            self._data = [["No active pools", None, None]]
+        self.layoutChanged.emit()
+
+    @property
+    def pools(self):
+        """
+        Returns the pools list.
+
+        Returns:
+            pools: list of pool objects
+        """
+        return self._pools
+
+    @pools.setter
+    def pools(self, value):
+        """Setter for pools"""
+        self._pools = value
+        self._set_table_data()
+
+    def data(self, index, role):
+        if role == Qt.DisplayRole:
+            # See below for the nested-list data structure.
+            # .row() indexes into the outer list,
+            # .column() indexes into the sub-list
+            return self._data[index.row()][index.column()]
+
+        if role == Qt.TextAlignmentRole:
+            value = self._data[index.row()][index.column()]
+
+            # right-align numbers
+            if isinstance(value, int):
+                return Qt.AlignVCenter + Qt.AlignRight
+
+    def rowCount(self, index):
+        # The length of the outer list.
+        return len(self._data)
+
+    def columnCount(self, index):
+        # The following takes the first sub-list, and returns
+        # the length (only works if all rows are an equal length)
+        return len(self._data[0])
+
+    def headerData(self, section, orientation, role):
+        # section is the index of the column/row.
+        if role == Qt.DisplayRole:
+            if orientation == Qt.Horizontal:
+                return str(self._columns[section])
+
+            if orientation == Qt.Vertical:
+                # return str(self._data.index[section])
+                return section + 1
+
+    def display_loading_message(self):
+        self._data = [["Loading pools...", None, None]]
+        self.layoutChanged.emit()

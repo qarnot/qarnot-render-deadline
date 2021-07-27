@@ -198,18 +198,28 @@ class QarnotRenderDeadline:
 
         return self.started_tasks
 
-    def stop_instances(self):
+    def stop_instances(self, pool_uuid=None):
         """
-        Stop all instances
+        Stop instances for all active pools or one specific pool
+
+        Args:
+            pool: optional UUID of a specific pool to close
         """
 
         self.refresh_connection()
 
-        active_pools = self.get_active_pools()
+        if pool_uuid is None:
+            active_pools = self.get_active_pools()
 
-        for active_pool in active_pools:
+            for active_pool in active_pools:
+                try:
+                    pool_uuid = self.conn.retrieve_pool(active_pool.uuid)
+                    pool_uuid.close()
+                except:
+                    logging.error("Error closing Pool {}".format(active_pool.name))
+        else:
             try:
-                pool = self.conn.retrieve_pool(active_pool.uuid)
-                pool.close()
+                pool_uuid = self.conn.retrieve_pool(pool_uuid)
+                pool_uuid.close()
             except:
-                logging.error("Error closing Pool {}".format(active_pool.name))
+                logging.error("Error closing Pool with UUID {}".format(pool_uuid))
