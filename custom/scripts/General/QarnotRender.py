@@ -1,5 +1,7 @@
 from System.IO import *
 
+from PyQt5.QtCore import QObject, pyqtSignal, QThreadPool, QRunnable, pyqtSlot
+
 from Deadline.Scripting import *
 from DeadlineUI.Controls.Scripting.DeadlineScriptDialog import DeadlineScriptDialog
 
@@ -7,7 +9,7 @@ import ThinkboxUI
 
 import qarnot_render_deadline
 
-import os
+import os, traceback, sys
 
 ########################################################################
 ## Globals
@@ -45,9 +47,7 @@ def __main__():
         "QarnotProfileCombo",
         "ComboControl",
         "",
-        [
-            "Qarnot API URL and token are not set or invalid, check the configuration tab"
-        ],
+        ["No deadline profiles availabe"],
         1,
         1,
     )
@@ -156,8 +156,7 @@ def __main__():
         ["ClusterAPIURLBox", "APITokenBox"],
     )
 
-    if refresh_qarnot_profiles_combo():
-        script_dialog.SetEnabled("SubmitButton", True)
+    refresh_qarnot_profiles_combo()
 
     script_dialog.ShowDialog(True)
 
@@ -167,14 +166,13 @@ def __main__():
 ########################################################################
 def refresh_qarnot_profiles_combo():
     """
-    Refreshes the profiles combo box
-
-    Returns:
-        True if the profiles were correctly refreshed
+    Refresh the profiles combo box.
     """
     global script_dialog
     global q_render_deadline
 
+    # TODO: move first connection and q_render_deadline initialization in its
+    # own function
     cluster_api_url = script_dialog.GetValue("ClusterAPIURLBox")
     api_token = script_dialog.GetValue("APITokenBox")
     if cluster_api_url and api_token:
@@ -182,31 +180,84 @@ def refresh_qarnot_profiles_combo():
             cluster_url=cluster_api_url,
             client_token=api_token,
         )
-        try:
-            q_render_deadline.refresh_connection()
-            qarnot_profiles = q_render_deadline.get_available_profiles()
-            qarnot_profiles_names = [x.name for x in qarnot_profiles]
-            script_dialog.SetItems("QarnotProfileCombo", qarnot_profiles_names)
-            profile_list = script_dialog.findChild(
-                ThinkboxUI.Controls.Scripting.ComboControl.ComboControl,
-                "QarnotProfileCombo",
-            )
-            profile_list_font = profile_list.font()
-            profile_list_font.setItalic(False)
-            profile_list.setFont(profile_list_font)
-            return True
-        except:
-            script_dialog.ShowMessageBox(
-                "Qarnot API credentials are invalid, check the configuration tab",
-                "Configuration issue",
-            )
-            return False
+        # fetch profiles in a worker thread
+        worker = Worker(fetch_qarnot_profiles)
+        worker.signals.result.connect(update_combo)
+        worker.signals.error.connect(display_invalid_conf)
+        QThreadPool.globalInstance().start(worker)
     else:
+        error_message = (
+            "Qarnot API URL and token are not set, check the configuration tab"
+        )
+        script_dialog.SetItems("QarnotProfileCombo", [error_message])
         script_dialog.ShowMessageBox(
-            "Qarnot API URL and token are not set, check the configuration tab",
+            error_message,
             "Configuration issue",
         )
-        return False
+
+
+def fetch_qarnot_profiles():
+    """
+    Fetch deadline profiles via the Qarnot API.
+
+    Returns:
+        qarnot_profiles: list of available Qarnot deadline profiles
+    """
+    global script_dialog
+
+    # disable submit button
+    script_dialog.SetEnabled("SubmitButton", False)
+    # display loading message
+    script_dialog.SetItems("QarnotProfileCombo", ["Loading profiles..."])
+    profile_list = script_dialog.findChild(
+        ThinkboxUI.Controls.Scripting.ComboControl.ComboControl,
+        "QarnotProfileCombo",
+    )
+    # set italic font
+    profile_list_font = profile_list.font()
+    profile_list_font.setItalic(True)
+    profile_list.setFont(profile_list_font)
+
+    # fetch profiles
+    q_render_deadline.refresh_connection()
+    qarnot_profiles = q_render_deadline.get_available_profiles()
+
+    return qarnot_profiles
+
+
+def update_combo(profiles):
+    """
+    Update profiles ComboControl widget
+
+    Args:
+        profiles: list of Qarnot profiles
+    """
+    global script_dialog
+
+    # populate the ComboControl widget
+    qarnot_profiles_names = [x.name for x in profiles]
+    script_dialog.SetItems("QarnotProfileCombo", qarnot_profiles_names)
+    profile_list = script_dialog.findChild(
+        ThinkboxUI.Controls.Scripting.ComboControl.ComboControl,
+        "QarnotProfileCombo",
+    )
+    # remove italic font
+    profile_list_font = profile_list.font()
+    profile_list_font.setItalic(False)
+    profile_list.setFont(profile_list_font)
+    # enable the Submit button
+    script_dialog.SetEnabled("SubmitButton", True)
+
+
+def display_invalid_conf():
+    global script_dialog
+
+    error_message = "Qarnot API credentials are invalid, check the configuration tab"
+    script_dialog.SetItems("QarnotProfileCombo", [error_message])
+    script_dialog.ShowMessageBox(
+        error_message,
+        "Configuration issue",
+    )
 
 
 def submit_button_pressed(*args):
@@ -243,17 +294,82 @@ def update_qarnot_account_url(*args):
 def save_button_pressed(*args):
     global script_dialog
 
-    script_dialog.SetValue("SaveButton", "Saving...")
     script_dialog.SaveSettings(
         os.path.join(ClientUtils.GetUsersSettingsDirectory(), "QarnotRender.ini"),
         ["ClusterAPIURLBox", "APITokenBox"],
     )
-    if refresh_qarnot_profiles_combo():
-        script_dialog.SetEnabled("SubmitButton", True)
-    script_dialog.SetValue("SaveButton", "Save")
+    refresh_qarnot_profiles_combo()
 
 
 def close_button_pressed(*args):
     global script_dialog
     script_dialog.CloseDialog()
 
+
+########################################################################
+## Helper Classes
+########################################################################
+class WorkerSignals(QObject):
+    """
+    Defines the signals available from a running worker thread.
+    Source: https://www.mfitzp.com/tutorials/multithreading-pyqt-applications-qthreadpool/
+
+    Supported signals are:
+
+    finished
+        No data
+
+    error
+        tuple (exctype, value, traceback.format_exc() )
+
+    result
+        object data returned from processing, anything
+
+    """
+
+    finished = pyqtSignal()
+    error = pyqtSignal(tuple)
+    result = pyqtSignal(object)
+
+
+class Worker(QRunnable):
+    """
+    Worker thread
+    Source: https://www.mfitzp.com/tutorials/multithreading-pyqt-applications-qthreadpool/
+
+    Inherits from QRunnable to handler worker thread setup, signals and wrap-up.
+
+    :param callback: The function callback to run on this worker thread. Supplied args and
+                     kwargs will be passed through to the runner.
+    :type callback: function
+    :param args: Arguments to pass to the callback function
+    :param kwargs: Keywords to pass to the callback function
+
+    """
+
+    def __init__(self, fn, *args, **kwargs):
+        super(Worker, self).__init__()
+        self.setAutoDelete(True)
+        # Store constructor arguments (re-used for processing)
+        self.fn = fn
+        self.args = args
+        self.kwargs = kwargs
+        self.signals = WorkerSignals()
+
+    @pyqtSlot()
+    def run(self):
+        """
+        Initialize the runner function with passed args, kwargs.
+        """
+
+        # Retrieve args/kwargs here; and fire processing using them
+        try:
+            result = self.fn(*self.args, **self.kwargs)
+        except:
+            traceback.print_exc()
+            exctype, value = sys.exc_info()[:2]
+            self.signals.error.emit((exctype, value, traceback.format_exc()))
+        else:
+            self.signals.result.emit(result)  # Return the result of the processing
+        finally:
+            self.signals.finished.emit()  # Done
