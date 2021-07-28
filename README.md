@@ -55,8 +55,8 @@ self.license_server = ""
 self.license_mode = "Standard"
 # Your Deadline Remote Connection Server (RCS) in the form "hostname:port"
 self.repository = ""
-# TODO: handle the case where a certificate file is provided
-self.proxy_crt = "True"
+# Path to your "Deadline10RemoteClient.pfx" file
+self.proxy_crt = ""
 self.proxy_ssl = "True"
 ######## CONFIGURATION #########################################################
 ```
