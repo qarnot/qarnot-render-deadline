@@ -26,6 +26,8 @@ class QarnotRenderDeadline:
         self.repository = ""
         # Path to your "Deadline10RemoteClient.pfx" file
         self.proxy_crt = ""
+        # The optional certificate password
+        self.proxy_crt_pwd = ""
         self.proxy_ssl = "True"
         ######## CONFIGURATION #########################################################
         self.deadline_prefix = "deadline"
@@ -191,6 +193,7 @@ class QarnotRenderDeadline:
         with open(self.proxy_crt, "rb") as fin:
             deadline_certificate = base64.b64encode(fin.read())
         task.constants["DEADLINE_CRT"] = str(deadline_certificate)
+        task.constants["DEADLINE_CRT_PWD"] = self.proxy_crt_pwd
 
         task.submit()
 

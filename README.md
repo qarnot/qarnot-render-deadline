@@ -57,10 +57,10 @@ self.license_mode = "Standard"
 self.repository = ""
 # Path to your "Deadline10RemoteClient.pfx" file
 self.proxy_crt = ""
+# The optional certificate password
+self.proxy_crt_pwd = ""
 self.proxy_ssl = "True"
 ######## CONFIGURATION #########################################################
 ```
-
-Only `license_server` and `repository` have to be filled (the rest being handled in the Qarnot profile/payload).
 
 The configuration is done manually in `qdeadline.py` for now but all those options will eventually be exposed in the Deadline Monitor UI.
