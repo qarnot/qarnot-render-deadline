@@ -186,6 +186,7 @@ class QarnotRenderDeadline:
         task.results = bucketOut
         task.resources = [bucketIn]
 
+        task.constants["DOCKER_HOST"] = "qarnot" + suffix + "-${INSTANCE_ID}"
         task.constants["DEADLINE_REPOSITORY"] = self.repository
         task.constants["DEADLINE_SSL"] = self.proxy_ssl
         task.constants["DEADLINE_LICENSE_MODE"] = self.license_mode
