@@ -63,4 +63,6 @@ self.proxy_ssl = "True"
 ######## CONFIGURATION #########################################################
 ```
 
+Please note that `qarnot_render_deadline.py` is only read at startup so **you need to relaunch Deadline Monitor after modifying the configuration**.
+
 The configuration is done manually in `qdeadline.py` for now but all those options will eventually be exposed in the Deadline Monitor UI.
