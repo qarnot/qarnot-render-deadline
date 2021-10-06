@@ -34,7 +34,7 @@ It has been tested with Deadline v10.1.3.6.
    The `qarnot` module also has to be installed with:
 
    ```bash
-   pip install --target /opt/Thinkbox/Deadline10/lib/python2.7/site-packages qarnot
+   pip install --target /opt/Thinkbox/Deadline10/lib/python2.7/site-packages 'qarnot==2.3.1'
    ```
 
  * Deadline Monitor UI script
