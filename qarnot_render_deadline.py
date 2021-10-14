@@ -31,7 +31,7 @@ class QarnotRenderDeadline:
         self.proxy_ssl = "True"
         ######## CONFIGURATION #########################################################
         self.deadline_prefix = "deadline"
-        self.resources_bucket = "deadline-input"
+        self.resources_bucket = ["deadline-input"]
         self.results_bucket = "deadline-output"
 
         self.error_credentials = "Invalid credentials"
@@ -182,9 +182,11 @@ class QarnotRenderDeadline:
         task_name = profile + suffix + "-task"
         task = self.conn.create_task(task_name, pool, count)
         bucketOut = self.conn.create_bucket(self.results_bucket)
-        bucketIn = self.conn.create_bucket(self.resources_bucket)
+        bucketIn = []
+        for new_bucket in self.resources_bucket:
+            bucketIn.append(self.conn.create_bucket(new_bucket))
         task.results = bucketOut
-        task.resources = [bucketIn]
+        task.resources = bucketIn
 
         task.constants["DOCKER_HOST"] = "qarnot" + suffix + "-${INSTANCE_ID}"
         task.constants["DEADLINE_REPOSITORY"] = self.repository
