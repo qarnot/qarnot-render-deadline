@@ -1,25 +1,25 @@
 # qarnot-render-deadline
 
-The Qarnot integration for [Deadline](https://www.awsthinkbox.com/deadline), based on a python module + a Deadline Monitor UI script.
+The Qarnot integration for [Deadline](https://www.awsthinkbox.com/deadline), based on a python module + a Deadline Monitor UI script:
 
-The python module `qarnot_render_deadline` can be used this way:
+* The Deadline Monitor UI script `QarnotRender` can be found in the `Scripts` menu.
 
-```python
-import qarnot_render_deadline
+* The python module `qarnot_render_deadline` can be used this way:
 
-q_render_deadline = qarnot_render_deadline.QarnotRenderDeadline(
-    client_token="YOUR_API_TOKEN", cluster_url="https://api.qarnot.com"
-)
-q_render_deadline.create_instances("deadline-client-10.1-blender-2.91", 2)
-# Deadline workers will appear in Deadline Monitor once the pool and task is
-# fully dispatched. You can then launch Deadline jobs against those machines
-# and, once you're done, shut the workers down with:
-q_render_deadline.stop_instances()
-```
+  ```python
+  import qarnot_render_deadline
 
-The Deadline Monitor UI script `QarnotRender` can be found in the `Scripts` menu.
+  q_render_deadline = qarnot_render_deadline.QarnotRenderDeadline(
+      client_token="YOUR_API_TOKEN", cluster_url="https://api.qarnot.com"
+  )
+  q_render_deadline.create_instances("deadline-client-10.1-blender-2.91", 2)
+  # Deadline workers will appear in Deadline Monitor once the pool and task is
+  # fully dispatched. You can then launch Deadline jobs against those machines
+  # and, once you're done, shut the workers down with:
+  q_render_deadline.stop_instances()
+  ```
 
-It has been tested with Deadline v10.1.3.6.
+It has been tested with Deadline v10.1.3.6 but should work with any Deadline version.
 
 ## Installation
 
