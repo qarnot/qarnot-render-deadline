@@ -2,7 +2,9 @@
 
 The Qarnot integration for [Deadline](https://www.awsthinkbox.com/deadline), based on a python module + a Deadline Monitor UI script:
 
-* The Deadline Monitor UI script `QarnotRender` can be found in the `Scripts` menu.
+* The Deadline Monitor UI script `QarnotRender` can be found in the `Scripts` menu:
+
+  ![qarnot-render-deadline Deadline Monitor UI script](qarnot-render-deadline-monitor_ui_script.png "qarnot-render-deadline Deadline Monitor UI script")
 
 * The python module `qarnot_render_deadline` can be used this way:
 
