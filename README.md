@@ -27,16 +27,27 @@ It has been tested with Deadline v10.1.3.6 but should work with any Deadline ver
 
    The file [qarnot_render_deadline.py](qarnot_render_deadline.py) must be manually copied on the machine running the Deadline Monitor to:
 
+   * on Linux:
    ```
    /opt/Thinkbox/Deadline10/lib/python2.7/site-packages/qarnot_render_deadline.py
    ```
 
+   * on Windows (**Warning**: if you download the RAW file from github, make sure that the extension ".txt" was not added to the python file and remove it if needed):
+   ```
+   C:\Program Files\Thinkbox\Deadline10\bin\Lib\site-packages\qarnot_render_deadline.py
+   ```
+
    The `qarnot` module also has to be installed with:
 
+   * on Linux:
    ```bash
    pip install --target /opt/Thinkbox/Deadline10/lib/python2.7/site-packages 'qarnot==2.3.1'
    ```
 
+   * on Windows:
+   ```powershell
+   py -m pip install --target 'C:\Program Files\Thinkbox\Deadline10\bin\Lib\site-packages' 'qarnot==2.3.1'
+   ```
  * Deadline Monitor UI script
 
    The file [custom/scripts/General/QarnotRender.py](custom/scripts/General/QarnotRender.py) must be copied in the Deadline repository's `custom` directory:
