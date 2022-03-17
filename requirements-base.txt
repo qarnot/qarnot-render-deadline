@@ -1,1 +1,1 @@
-qarnot
+git+https://github.com/qarnot/qarnot-sdk-python-27.git

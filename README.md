@@ -43,12 +43,14 @@ It has been tested with Deadline v10.1.3.6 but should work with any Deadline ver
 
    * on Linux:
    ```bash
-   pip install --target /opt/Thinkbox/Deadline10/lib/python2.7/site-packages 'qarnot==2.3.1'
+   # Use Qarnot Python SDK for python 2.7 (version used by Deadline)
+   pip install --target /opt/Thinkbox/Deadline10/lib/python2.7/site-packages git+https://github.com/qarnot/qarnot-sdk-python-27.git
    ```
 
    * on Windows:
    ```powershell
-   py -m pip install --target 'C:\Program Files\Thinkbox\Deadline10\bin\Lib\site-packages' 'qarnot==2.3.1'
+   # Use Qarnot Python SDK for python 2.7 (version used by Deadline)
+   py -m pip install --target "C:\Program Files\Thinkbox\Deadline10\bin\Lib\site-packages" "git+https://github.com/qarnot/qarnot-sdk-python-27.git"
    ```
  * Deadline Monitor UI script
 
