@@ -198,6 +198,9 @@ class QarnotRenderDeadline:
         task.constants["DEADLINE_CRT"] = str(deadline_certificate)
         task.constants["DEADLINE_CRT_PWD"] = self.proxy_crt_pwd
 
+        # upload results when the task is manually cancelled
+        task.upload_results_on_cancellation = True
+
         task.submit()
 
         # take snapshots every 5 minutes
