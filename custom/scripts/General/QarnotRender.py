@@ -93,41 +93,41 @@ def __main__():
     console_button.ValueModified.connect(console_button_pressed)
 
     script_dialog.AddControlToGrid(
-        "PoolsSeparator",
+        "TasksSeparator",
         "SeparatorControl",
-        "Active pools",
+        "Active tasks",
         6,
         0,
         colSpan=2,
     )
 
-    pool_model = PoolModel()
+    task_model = TaskModel()
 
-    pool_view = QtWidgets.QTableView()
-    pool_view.setObjectName("PoolView")
-    pool_view.setModel(pool_model)
+    task_view = QtWidgets.QTableView()
+    task_view.setObjectName("TaskView")
+    task_view.setModel(task_model)
     # hide the UUID column (but the data needs to stay to launch actions against
-    # the selected pools)
-    pool_view.setColumnHidden(2, True)
+    # the selected tasks)
+    task_view.setColumnHidden(2, True)
     # auto adjust column width based on content
-    pool_view.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-    pool_view.resizeColumnsToContents()
+    task_view.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+    task_view.resizeColumnsToContents()
     # automatically resize columns when the model changes
-    pool_model.layoutChanged.connect(pool_view.resizeColumnsToContents)
+    task_model.layoutChanged.connect(task_view.resizeColumnsToContents)
     # select row with one click
-    pool_view.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
-    # automatically enable/disable the pool close button
-    pool_model.layoutChanged.connect(update_pool_close_button)
+    task_view.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
+    # automatically enable/disable the task abort button
+    task_model.layoutChanged.connect(update_task_abort_button)
 
-    grid.addWidget(pool_view, 7, 0, 1, 2)
+    grid.addWidget(task_view, 7, 0, 1, 2)
 
-    pool_close_button = script_dialog.AddControlToGrid(
-        "PoolCloseButton", "ButtonControl", "Close pool", 8, 0, colSpan=1
+    task_abort_button = script_dialog.AddControlToGrid(
+        "TaskAbortButton", "ButtonControl", "Abort task", 8, 0, colSpan=1
     )
-    # disable the close button by default
-    # it will be enabled when the pool table is populated
-    script_dialog.SetEnabled("PoolCloseButton", False)
-    pool_close_button.ValueModified.connect(pool_close_button_pressed)
+    # disable the abort button by default
+    # it will be enabled when the task table is populated
+    script_dialog.SetEnabled("TaskAbortButton", False)
+    task_abort_button.ValueModified.connect(task_abort_button_pressed)
 
     script_dialog.EndGrid()
     script_dialog.EndTabPage()
@@ -195,7 +195,7 @@ def __main__():
     )
 
     refresh_qarnot_profiles_combo()
-    refresh_qarnot_pools()
+    refresh_qarnot_tasks()
 
     script_dialog.ShowDialog(True)
 
@@ -299,40 +299,40 @@ def display_invalid_conf():
     )
 
 
-def refresh_qarnot_pools():
-    # fetch pools in a worker thread
-    worker = Worker(fetch_qarnot_pools)
-    worker.signals.result.connect(update_pool_view)
+def refresh_qarnot_tasks():
+    # fetch tasks in a worker thread
+    worker = Worker(fetch_qarnot_tasks)
+    worker.signals.result.connect(update_task_view)
     QThreadPool.globalInstance().start(worker)
 
 
-def fetch_qarnot_pools():
+def fetch_qarnot_tasks():
 
     # display loading message
-    pool_view = script_dialog.findChild(
+    task_view = script_dialog.findChild(
         QtWidgets.QTableView,
-        "PoolView",
+        "TaskView",
     )
-    pool_model = pool_view.model()
-    pool_model.display_loading_message()
+    task_model = task_view.model()
+    task_model.display_loading_message()
 
-    # fetch active pools
+    # fetch active tasks
     q_render_deadline.refresh_connection()
-    active_pools = q_render_deadline.get_active_pools()
+    active_tasks = q_render_deadline.get_active_tasks()
 
-    return active_pools
+    return active_tasks
 
 
-def update_pool_view(active_pools):
+def update_task_view(active_tasks):
     global script_dialog
 
-    pool_view = script_dialog.findChild(
+    task_view = script_dialog.findChild(
         QtWidgets.QTableView,
-        "PoolView",
+        "TaskView",
     )
-    pool_model = pool_view.model()
+    task_model = task_view.model()
 
-    pool_model.pools = active_pools
+    task_model.tasks = active_tasks
 
 
 def submit_button_pressed(*args):
@@ -343,10 +343,10 @@ def submit_button_pressed(*args):
     instance_number = script_dialog.GetValue("QarnotInstancesNumberBox")
     q_render_deadline.create_instances(profile, instance_number)
     script_dialog.ShowMessageBox(
-        "Pool submitted, open the Qarnot Console for more information",
+        "Task submitted, open the Qarnot Console for more information",
         "Submit confirmation",
     )
-    refresh_qarnot_pools()
+    refresh_qarnot_tasks()
 
 
 def console_button_pressed(*args):
@@ -356,39 +356,39 @@ def console_button_pressed(*args):
     script_dialog.OpenUrl(url)
 
 
-def update_pool_close_button(*args):
+def update_task_abort_button(*args):
     global script_dialog
 
-    pool_view = script_dialog.findChild(
+    task_view = script_dialog.findChild(
         QtWidgets.QTableView,
-        "PoolView",
+        "TaskView",
     )
-    pool_model = pool_view.model()
+    task_model = task_view.model()
 
-    # check pool uuid value of first line
-    pool_uuid = pool_model.data(pool_model.index(0, 2), Qt.DisplayRole)
+    # check task uuid value of first line
+    task_uuid = task_model.data(task_model.index(0, 2), Qt.DisplayRole)
 
-    if pool_uuid:
-        script_dialog.SetEnabled("PoolCloseButton", True)
+    if task_uuid:
+        script_dialog.SetEnabled("TaskAbortButton", True)
     else:
-        script_dialog.SetEnabled("PoolCloseButton", False)
+        script_dialog.SetEnabled("TaskAbortButton", False)
 
 
-def pool_close_button_pressed(*args):
+def task_abort_button_pressed(*args):
     global script_dialog
     global q_render_deadline
 
-    pool_view = script_dialog.findChild(
+    task_view = script_dialog.findChild(
         QtWidgets.QTableView,
-        "PoolView",
+        "TaskView",
     )
-    indexes = pool_view.selectionModel().selectedRows()
+    indexes = task_view.selectionModel().selectedRows()
 
     for index in indexes:
-        pool_uuid = index.child(index.row(), 2).data()
-        q_render_deadline.stop_instances(pool_uuid)
+        task_uuid = index.child(index.row(), 2).data()
+        q_render_deadline.stop_instances(task_uuid)
 
-    refresh_qarnot_pools()
+    refresh_qarnot_tasks()
 
 
 def update_qarnot_account_url(*args):
@@ -486,36 +486,36 @@ class Worker(QRunnable):
             self.signals.finished.emit()  # Done
 
 
-class PoolModel(QtCore.QAbstractTableModel):
-    def __init__(self, pools=None):
+class TaskModel(QtCore.QAbstractTableModel):
+    def __init__(self, tasks=None):
         super(QtCore.QAbstractTableModel, self).__init__()
-        self._pools = pools
+        self._tasks = tasks
         self._data = []
-        self._columns = ["Pool name", "Instances", "UUID"]
+        self._columns = ["Task name", "Instances", "UUID"]
 
         self._set_table_data()
 
     def _set_table_data(self):
-        if self._pools:
-            self._data = [(x.name, x.instancecount, x.uuid) for x in self._pools]
+        if self._tasks:
+            self._data = [(x.name, x.instancecount, x.uuid) for x in self._tasks]
         else:
-            self._data = [["No active pools", None, None]]
+            self._data = [["No active tasks", None, None]]
         self.layoutChanged.emit()
 
     @property
-    def pools(self):
+    def tasks(self):
         """
-        Returns the pools list.
+        Returns the tasks list.
 
         Returns:
-            pools: list of pool objects
+            tasks: list of task objects
         """
-        return self._pools
+        return self._tasks
 
-    @pools.setter
-    def pools(self, value):
-        """Setter for pools"""
-        self._pools = value
+    @tasks.setter
+    def tasks(self, value):
+        """Setter for tasks"""
+        self._tasks = value
         self._set_table_data()
 
     def data(self, index, role):
@@ -552,5 +552,5 @@ class PoolModel(QtCore.QAbstractTableModel):
                 return section + 1
 
     def display_loading_message(self):
-        self._data = [["Loading pools...", None, None]]
+        self._data = [["Loading tasks...", None, None]]
         self.layoutChanged.emit()

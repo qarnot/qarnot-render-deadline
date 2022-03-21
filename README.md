@@ -15,8 +15,8 @@ The Qarnot integration for [Deadline](https://www.awsthinkbox.com/deadline), bas
       client_token="YOUR_API_TOKEN", cluster_url="https://api.qarnot.com"
   )
   q_render_deadline.create_instances("deadline-client-10.1-blender-2.91", 2)
-  # Deadline workers will appear in Deadline Monitor once the pool and task is
-  # fully dispatched. You can then launch Deadline jobs against those machines
+  # Deadline workers will appear in Deadline Monitor once the task is fully
+  # dispatched. You can then launch Deadline jobs against those machines
   # and, once you're done, shut the workers down with:
   q_render_deadline.stop_instances()
   ```

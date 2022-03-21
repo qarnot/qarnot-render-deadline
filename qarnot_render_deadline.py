@@ -112,34 +112,6 @@ class QarnotRenderDeadline:
         )
         return active_tasks
 
-    def get_active_pools(self):
-        """
-        Get active pools.
-
-        Returns:
-            active_pools: list of pool objects that are currently active
-        """
-
-        active_pools = []
-        self.refresh_connection()
-
-        pools = self.conn.pools(summary=True)
-        excluded_states = ["Closed", "Closing", "PendingDelete", "Failure"]
-
-        for pool in pools:
-            # add only active pools dedicated to deadline
-            logging.debug('Evaluating pool "{}": {}'.format(pool.name, pool.state))
-            if (
-                all(x not in pool.state for x in excluded_states)
-                and self.deadline_prefix in pool.name
-            ):
-                active_pools.append(pool)
-
-        logging.debug(
-            'Active pools: "{}"'.format([(x.name, x.uuid) for x in active_pools])
-        )
-        return active_pools
-
     def create_instances(
         self,
         profile,
@@ -173,14 +145,9 @@ class QarnotRenderDeadline:
             return rand
 
         suffix = random_suffix(r)
-        pool_name = profile + suffix
-        pool = self.conn.create_pool(
-            name=pool_name, profile=profile, instancecount=count
-        )
-        pool.submit()
 
-        task_name = profile + suffix + "-task"
-        task = self.conn.create_task(task_name, pool, count)
+        task_name = profile + suffix
+        task = self.conn.create_task(task_name, profile, count)
         bucketOut = self.conn.create_bucket(self.results_bucket)
         bucketIn = []
         for new_bucket in self.resources_bucket:
@@ -210,28 +177,28 @@ class QarnotRenderDeadline:
 
         return self.started_tasks
 
-    def stop_instances(self, pool_uuid=None):
+    def stop_instances(self, task_uuid=None):
         """
-        Stop instances for all active pools or one specific pool
+        Stop instances for all active tasks or one specific task
 
         Args:
-            pool: optional UUID of a specific pool to close
+            task: optional UUID of a specific task to abort
         """
 
         self.refresh_connection()
 
-        if pool_uuid is None:
-            active_pools = self.get_active_pools()
+        if task_uuid is None:
+            active_tasks = self.get_active_tasks()
 
-            for active_pool in active_pools:
+            for active_task in active_tasks:
                 try:
-                    pool_uuid = self.conn.retrieve_pool(active_pool.uuid)
-                    pool_uuid.close()
+                    task = self.conn.retrieve_task(active_task.uuid)
+                    task.abort()
                 except:
-                    logging.error("Error closing Pool {}".format(active_pool.name))
+                    logging.error("Error aborting Task {}".format(active_task.name))
         else:
             try:
-                pool_uuid = self.conn.retrieve_pool(pool_uuid)
-                pool_uuid.close()
+                task = self.conn.retrieve_task(task_uuid)
+                task.abort()
             except:
-                logging.error("Error closing Pool with UUID {}".format(pool_uuid))
+                logging.error("Error aborting Task with UUID {}".format(task_uuid))
