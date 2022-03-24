@@ -94,6 +94,7 @@ class QarnotRenderDeadline:
             "UploadingResults",
             "DownloadingResults",
             "Cancelled",
+            "PendingCancel",
             "Success",
             "Failure",
         ]
