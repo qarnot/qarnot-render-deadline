@@ -64,18 +64,14 @@ class QarnotRenderDeadline:
         available_profiles = []
         self.refresh_connection()
 
-        profiles = self.conn.profiles()
+        profiles = self.conn.profiles_names()
 
         for profile in profiles:
             # add only profiles dedicated to deadline
-            if self.deadline_prefix in profile.name:
+            if self.deadline_prefix in profile:
                 available_profiles.append(profile)
 
-        logging.debug(
-            'Available deadline profiles: "{}"'.format(
-                [(x.name) for x in available_profiles]
-            )
-        )
+        logging.debug('Available deadline profiles: "{}"'.format(available_profiles))
         return available_profiles
 
     def get_active_tasks(self):

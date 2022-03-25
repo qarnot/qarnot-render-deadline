@@ -274,7 +274,7 @@ def update_combo(profiles):
     global script_dialog
 
     # populate the ComboControl widget
-    qarnot_profiles_names = [x.name for x in profiles]
+    qarnot_profiles_names = profiles
     script_dialog.SetItems("QarnotProfileCombo", qarnot_profiles_names)
     profile_list = script_dialog.findChild(
         ThinkboxUI.Controls.Scripting.ComboControl.ComboControl,
