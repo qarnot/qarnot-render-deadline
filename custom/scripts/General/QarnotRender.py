@@ -385,8 +385,23 @@ def task_abort_button_pressed(*args):
     indexes = task_view.selectionModel().selectedRows()
 
     for index in indexes:
+        task_name = index.child(index.row(), 0).data()
         task_uuid = index.child(index.row(), 2).data()
+
+        # abort the task
         q_render_deadline.stop_instances(task_uuid)
+
+        # delete the associated workers
+        worker_names = RepositoryUtils.GetSlaveNames(True)
+        # filter workers with prefix "qarnot-XXXXXX-"
+        worker_prefix = "{}-{}-".format(
+            q_render_deadline.qarnot_hostname_prefix, task_name[-6:]
+        )
+        qarnot_workers = list(
+            filter(lambda worker: worker.startswith(worker_prefix), worker_names)
+        )
+        for qarnot_worker in qarnot_workers:
+            RepositoryUtils.DeleteSlave(qarnot_worker)
 
     refresh_qarnot_tasks()
 

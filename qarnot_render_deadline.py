@@ -33,6 +33,7 @@ class QarnotRenderDeadline:
         self.deadline_prefix = "deadline"
         self.resources_bucket = ["deadline-input"]
         self.results_bucket = "deadline-output"
+        self.qarnot_hostname_prefix = "qarnot"
 
         self.error_credentials = "Invalid credentials"
 
@@ -152,7 +153,9 @@ class QarnotRenderDeadline:
         task.results = bucketOut
         task.resources = bucketIn
 
-        task.constants["DOCKER_HOST"] = "qarnot" + suffix + "-${INSTANCE_ID}"
+        task.constants["DOCKER_HOST"] = (
+            self.qarnot_hostname_prefix + suffix + "-${INSTANCE_ID}"
+        )
         task.constants["DEADLINE_REPOSITORY"] = self.repository
         task.constants["DEADLINE_SSL"] = self.proxy_ssl
         task.constants["DEADLINE_LICENSE_MODE"] = self.license_mode
