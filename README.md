@@ -83,3 +83,11 @@ self.proxy_ssl = "True"
 Please note that `qarnot_render_deadline.py` is only read at startup so **you need to relaunch Deadline Monitor after modifying the configuration**.
 
 The configuration is done manually in `qdeadline.py` for now but all those options will eventually be exposed in the Deadline Monitor UI.
+
+## Data access
+
+The task's data are available in the environement variable `TASK_PATH` (which equals `/job` by default).
+
+If your renderer/DCC supports environment variables, it is better to use `TASK_PATH` directly. Though, most of the time this is not the case, so you can also use `/job` directly. And if you need this path to be renamed to a custom value (like `/work` or `/prod`, etc) to match your on-premise setup, please contact the support team through the chat present in the [Qarnot Console](https://console.qarnot.com/)).
+
+Data written to `TASK_PATH` are uploaded to the output bucket every 5 minutes and when the task is aborted.
