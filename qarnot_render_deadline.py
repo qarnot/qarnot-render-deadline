@@ -159,7 +159,7 @@ class QarnotRenderDeadline:
         task.constants["DEADLINE_LICENSE_SERVER"] = self.license_server
         with open(self.proxy_crt, "rb") as fin:
             deadline_certificate = base64.b64encode(fin.read())
-        task.constants["DEADLINE_CRT"] = deadline_certificate.decode('ascii')
+        task.constants["DEADLINE_CRT"] = deadline_certificate.decode("ascii")
         task.constants["DEADLINE_CRT_PWD"] = self.proxy_crt_pwd
 
         # upload results when the task is manually cancelled
