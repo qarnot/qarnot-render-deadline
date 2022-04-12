@@ -168,6 +168,9 @@ class QarnotRenderDeadline:
         # upload results when the task is manually cancelled
         task.upload_results_on_cancellation = True
 
+        # launch on instances with 128G RAM by default
+        task.hardware_constraints = [qarnot.hardware_constraint.MinimumRamHardware(128000)]
+
         task.submit()
 
         # take snapshots every 5 minutes
