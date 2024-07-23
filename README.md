@@ -101,6 +101,26 @@ Please note that `qarnot_render_deadline.py` is only read at startup so **you ne
 
 The configuration is done manually in `qdeadline.py` for now but all those options will eventually be exposed in the Deadline Monitor UI.
 
+## Use a specific renderer
+
+### Change image by changing `DOCKER_TAG`
+
+You can choose another docker tag in order to select an image with the renderer you want. 
+
+Available tags:
+* deadline-10.3.2.1-ubuntu
+* deadline-10.3.2.1-blender-4.1.1
+
+Example :
+```
+task.constant["DOCKER_TAG] = "deadline-10.3.2.1-blender-4.1.1"
+```
+
+### Upgrade image by importing software in your bucket
+
+You use a lot of plugins or your renderer isn't is the list above? No problem, you can create a bucket and upload your software in it in order to run it from Deadline. Please see below some documentation about Qarnot buckets.
+
+
 ## Data access
 #### TASK_PATH
 The task's data are available in the environement variable `TASK_PATH` (which equals `/job` by default).
