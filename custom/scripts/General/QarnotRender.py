@@ -398,7 +398,7 @@ def task_abort_button_pressed(*args):
             q_render_deadline.qarnot_hostname_prefix, task_name[-6:]
         )
         qarnot_workers = list(
-            filter(lambda worker: worker.startswith(worker_prefix), worker_names)
+            [worker for worker in worker_names if worker.startswith(worker_prefix)]
         )
         for qarnot_worker in qarnot_workers:
             RepositoryUtils.DeleteSlave(qarnot_worker)
