@@ -126,7 +126,6 @@ class QarnotRenderDeadline:
             started_tasks: list of tasks that were started
         """
 
-        startedIDs = []
         self.refresh_connection()
 
         # is random name good enough for uniqueness?
@@ -161,7 +160,7 @@ class QarnotRenderDeadline:
         task.constants["DEADLINE_LICENSE_MODE"] = self.license_mode
         task.constants["DEADLINE_LICENSE_SERVER"] = self.license_server
 
-        if self.proxy_ssl == "True" :
+        if self.proxy_ssl == "True":
             with open(self.proxy_crt, "rb") as fin:
                 deadline_certificate = base64.b64encode(fin.read())
             task.constants["DEADLINE_CRT"] = deadline_certificate.decode("ascii")
@@ -171,7 +170,9 @@ class QarnotRenderDeadline:
         task.upload_results_on_cancellation = True
 
         # launch on instances with 128G RAM by default
-        task.hardware_constraints = [qarnot.hardware_constraint.MinimumRamHardware(128000)]
+        task.hardware_constraints = [
+            qarnot.hardware_constraint.MinimumRamHardware(128000)
+        ]
 
         task.submit()
 

@@ -105,20 +105,26 @@ The configuration is done manually in `qdeadline.py` for now but all those optio
 
 ### Change image by changing `DOCKER_TAG`
 
-You can choose another docker tag in order to select an image with the renderer you want. 
+For a selected profile, you can choose an older image with the `DOCKER_TAG` constant. By default, `DOCKER_TAG` tag is set to latest.
 
-Available tags:
-* deadline-10.3.2.1-ubuntu
-* deadline-10.3.2.1-blender-4.1.1
+Available tags by profiles
+* **Deadline-client**
+  * `deadline-10.3.2.1-ubuntu`
+* **Deadline-client-blender**
+  * `deadline-10.3.2.1-blender-4.1.1`
+* **deadline-client-vray-standalone**
+  * `deadline-10.3.2.1-vray-62006`
+* **deadline-client-vray-standalone-byol**
+  * `deadline-10.3.2.1-vray-62006`
 
 Example :
 ```
-task.constant["DOCKER_TAG] = "deadline-10.3.2.1-blender-4.1.1"
+task.constant["DOCKER_TAG"] = "deadline-10.3.2.1-blender-4.1.1"
 ```
 
 ### Upgrade image by importing software in your bucket
 
-You use a lot of plugins or your renderer isn't is the list above? No problem, you can create a bucket and upload your software in it in order to run it from Deadline. Please see below some documentation about Qarnot buckets.
+You use a lot of plugins or your renderer isn't is the list above? No problem, you can create a bucket and upload your software in it in order to run it from Deadline. Please see below some documentations about Qarnot buckets.
 
 
 ## Data access
@@ -131,8 +137,35 @@ Data written to `TASK_PATH` are uploaded to the output bucket every 5 minutes an
 
 #### Buckets
 
-The output bucket of the task is defined `line 149` and the input bucket juste below at `line 150`. 
+The output bucket of the task is defined `line 149` and the input bucket just  at `line 150`. 
 - You can [name them](https://qarnot.com/documentation/sdk-python/api/connection.html#qarnot.connection.Connection.retrieve_or_create_bucket) the way you need. 
 - And specifically for the input buckets, you can [fill it before it start](https://qarnot.com/documentation/sdk-python/api/compute/task.html#qarnot.task.Task.resources) or [update it while it's running](https://qarnot.com/documentation/sdk-python/api/compute/task.html#qarnot.task.Task.update_resources)
 
 Here is some S3 data managment softwares [documentation](https://qarnot.com/documentation/en/managing-your-data/with-any-s3-compatible-software/on-windows) in order for you to populate or retrieve your data from your buckets.
+
+
+## Vray  
+<details>
+  <summary> See more about vray usage with deadline on Qarnot </summary>
+
+### Vray Standalone Debug
+If you encounter this kind of error: `Error: [Errno 21] Is a directory:`, it's possibly path mapping related. You can disable it in `Tools>ConfigurePlugins>Vray>PathMapping For Vrscene`, or tweak the deadline plugin to suit your needs.
+
+> **_NOTE:_** :  V-Ray File location setting while submitting has to mock Qaarnot architecture and be in the `/job` directory e.g. `/job/vases/vases.vrscene` . 
+
+### Licenses
+Vray license IP and Port has to be set in an xml file like this one : `deadline-input/vrlclient.xml`. 
+This file has to be in `/job/` to be recognize. Thus, upload it to a bucket and attach it to your task like below:
+
+``` python
+input_bucket = self.conn.create_bucket('deadline-input')
+input_bucket.sync_directory("deadline-input")
+task.resources.append(input_bucket)
+```
+
+#### BYOL
+Need to do **B**ring **Y**our **O**wn **L**icense for VRay? Just select `deadline-client-vray-standalone-byol` as profile and change IP and Port to yours in `vrlclient.xml`.
+
+#### License On Demand
+You need license for Vray? Do not change IP and Port in `vrlclient.xml` and use `deadline-client-vray-standalone` profile.
+</details>
